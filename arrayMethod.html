@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <h3 id="hey">hello Immortal</h3>
+    <button onclick="greet()">greet</button>
+    <script>
+        let namesOfFoods = [
+            {
+                name: 'shola',
+                Age: 25,
+                class: 'sss1',
+                bloodGroup: 'O-positive',
+            }
+
+        ]
+        console.log(namesOfFoods);
+
+
+        let namesOfStates = ['Oyo', 'anambra', 'ekiti', 'Ogun']
+        namesOfStates.shift()
+
+        console.log(namesOfStates);
+
+        function greet() {
+            let pleasantries = 'good morning'
+            document.getElementById('hey').textContent = ' Bow Down Worm';
+
+        }
+
+        let nameOfAnimals = ['lion', 'tiger', 'monkey', 'orca', 'goat']
+        nameOfAnimals.push('camel', 'donkey')
+        console.log(nameOfAnimals);
+
+        let name = 'Micheal';
+        let Gender = 'male';
+        let age = 5;
+        console.log(`my name is ${name}, i am a ${Gender}gender and am ${age} years old`);
+
+    </script>
+
+
+</body>
+
+</html>

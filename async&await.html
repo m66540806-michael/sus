@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h3>Async/Await Example</h3>
+
+    <button onclick="getMusic()">get music</button>
+
+    <div id="fetchAPI"></div>
+
+    <button onclick="greet()"> hi</button>
+
+
+
+    <canvas style="width: 100; height: 300; border: 2px solid red;"></canvas>
+
+
+    <script>
+        function greet() {
+            alert('hi');
+        }
+
+
+
+
+
+
+        // const ApiUser = document.getElementById('fetchAPI');
+
+        // async function getMusic() {
+        //     try {
+        //         const response = await fetch('https://itunes.apple.com/search?term=burna+boy&entity=song&limit=10');
+        //         if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+        //         const data = await response.json();
+        //         const songs = data.results || [];
+
+        //         ApiUser.innerHTML = songs.map(song => `
+        //             <div>
+        //                 <h2>${song.trackName}</h2>
+        //                 <h3>${song.artistName}</h3>
+        //                 <audio controls>
+        //                     <source src="${song.previewUrl}" type="audio/mpeg">
+        //                     <source src="${song.artistViewUrl}" type="audio/mpeg">
+        //                     <source src="${song.trackViewUrl}" type="audio/mpeg">
+        //                     <source src="${song.collectionViewUrl}" type="audio/mpeg">
+        //                     Your browser does not support the audio element.
+        //                 </audio>
+        //                 <p>${song.collectionName || 'No album'}</p>
+        //             </div>
+        //         `).join('');
+        //     } catch (error) {
+        //         console.error('Error fetching songs:', error);
+        //     }
+        // }
+    </script>
+
+</body>
+
+</html>

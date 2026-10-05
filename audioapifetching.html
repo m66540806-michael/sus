@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burna boy palava</title>
+</head>
+
+<body>
+    <h2>Api Class</h2>
+    <div id="fetchAPI"></div>
+
+
+
+    <script>
+        const ApiUser = document.getElementById('fetchAPI');
+
+        fetch('https://itunes.apple.com/search?term=burna+boy&entity=song&limit=10')
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                const songs = data.results || [];
+
+                ApiUser.innerHTML = songs.map(song => `
+                    <div>
+                        <h2>${song.trackName}</h2>
+                        <h3>${song.artistName}</h3>
+                        <audio controls>
+                            <source src="${song.previewUrl}" type="audio/mpeg">
+                            <source src="${song.artistViewUrl}" type="audio/mpeg">
+                            <source src="${song.trackViewUrl}" type="audio/mpeg">
+                            <source src="${song.collectionViewUrl}" type="audio/mpeg">
+                            Your browser does not support the audio element.
+                        <p>${song.collectionName || 'No album'}</p>
+                    </div>
+                `).join('');
+            })
+            .catch(error => {
+                console.error('Error fetching songs:', error);
+            });
+    </script>
+</body>
+
+</html>

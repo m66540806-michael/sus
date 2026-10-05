@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Last Light | A shipboard mystery</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+        :root {
+            color-scheme: dark;
+            --ink: #10191d;
+            --panel: #172328;
+            --panel-light: #1d2d32;
+            --line: #385057;
+            --muted: #8da1a3;
+            --paper: #e7efeb;
+            --mint: #9fe3c6;
+            --red: #ef6e63;
+            --yellow: #f2c46b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-width: 320px;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--paper);
+            background-color: var(--ink);
+            background-image: linear-gradient(rgba(159, 227, 198, .025) 1px, transparent 1px), linear-gradient(90deg, rgba(159, 227, 198, .025) 1px, transparent 1px);
+            background-size: 32px 32px;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        .app {
+            width: min(1400px, 100%);
+            margin: auto;
+            padding: 20px clamp(14px, 3vw, 38px) 24px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-mark {
+            display: grid;
+            width: 42px;
+            height: 42px;
+            place-items: center;
+            border: 1px solid #58736d;
+            border-radius: 12px;
+            background: #203b36;
+            color: var(--mint);
+        }
+
+        .brand-mark svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .brand-name {
+            margin: 0;
+            font: 800 23px/.9 'Barlow Condensed', sans-serif;
+            letter-spacing: 0;
+        }
+
+        .brand-sub {
+            margin: 5px 0 0;
+            color: var(--muted);
+            font: 10px 'DM Mono', monospace;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+        }
+
+        .ship-status {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            color: #b5c4bf;
+            font: 11px 'DM Mono', monospace;
+            letter-spacing: .6px;
+        }
+
+        .status-light {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--mint);
+            box-shadow: 0 0 12px #9fe3c699;
+        }
+
+        .game-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 290px;
+            align-items: stretch;
+            gap: 14px;
+        }
+
+        .game-main {
+            min-width: 0;
+        }
+
+        .canvas-shell {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #40555a;
+            border-radius: 8px;
+            background: #1b292c;
+            box-shadow: 0 20px 60px #0005;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            aspect-ratio: 1.6;
+        }
+
+        .canvas-topline {
+            position: absolute;
+            inset: 13px 15px auto;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+
+        .canvas-tag {
+            padding: 6px 9px;
+            border: 1px solid #82938a55;
+            border-radius: 3px;
+            color: #eff5e8;
+            background: #142126c9;
+            font: 10px 'DM Mono', monospace;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+        }
+
+        .interact-hint {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 12px;
+            border: 1px solid #7e9a88;
+            border-radius: 4px;
+            color: #f2f6ed;
+            background: #172725eF;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity .15s;
+            pointer-events: none;
+        }
+
+        .interact-hint.visible {
+            opacity: 1;
+        }
+
+        .interact-hint kbd {
+            display: inline-grid;
+            min-width: 20px;
+            height: 19px;
+            margin-right: 5px;
+            place-items: center;
+            border: 1px solid #81948b;
+            border-radius: 3px;
+            font: 10px 'DM Mono', monospace;
+        }
+
+        .below-canvas {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 12px 2px 0;
+            color: var(--muted);
+            font: 10px 'DM Mono', monospace;
+            letter-spacing: .25px;
+        }
+
+        .key-help {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .key-help kbd {
+            padding: 2px 5px;
+            border: 1px solid #405359;
+            border-radius: 3px;
+            color: #d7e2dc;
+            background: #1b292d;
+            font: 10px 'DM Mono', monospace;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .panel {
+            padding: 16px;
+            border: 1px solid #34494f;
+            border-radius: 6px;
+            background: var(--panel);
+        }
+
+        .eyebrow {
+            margin: 0 0 10px;
+            color: var(--muted);
+            font: 10px 'DM Mono', monospace;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        .objective-title {
+            margin: 0;
+            font: 700 21px/1.05 'Barlow Condensed', sans-serif;
+            letter-spacing: .3px;
+        }
+
+        .objective-copy {
+            margin: 8px 0 13px;
+            color: #a8b7b2;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .progress-track {
+            height: 5px;
+            overflow: hidden;
+            border-radius: 3px;
+            background: #314248;
+        }
+
+        .progress-fill {
+            width: 0;
+            height: 100%;
+            background: var(--mint);
+            transition: width .25s;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 7px;
+            color: #b7c7c0;
+            font: 10px 'DM Mono', monospace;
+        }
+
+        .roster {
+            display: grid;
+            gap: 8px;
+        }
+
+        .crew-row {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            min-width: 0;
+            color: #d7e1dc;
+            font-size: 12px;
+        }
+
+        .crew-dot {
+            flex: 0 0 auto;
+            width: 10px;
+            height: 10px;
+            border: 1px solid #ffffff44;
+            border-radius: 50%;
+        }
+
+        .crew-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .crew-state {
+            margin-left: auto;
+            color: #9badab;
+            font: 9px 'DM Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        .crew-state.dead {
+            color: var(--red);
+        }
+
+        .action-button {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 42px;
+            border: 1px solid #4b6766;
+            border-radius: 4px;
+            color: #e6f2eb;
+            background: #243d3b;
+            font: 700 11px 'DM Mono', monospace;
+            letter-spacing: .65px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background .15s, transform .15s;
+        }
+
+        .action-button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            background: #31524c;
+        }
+
+        .action-button:disabled {
+            border-color: #354449;
+            color: #6f8080;
+            background: #202d31;
+            cursor: not-allowed;
+        }
+
+        .action-button svg {
+            width: 17px;
+            height: 17px;
+        }
+
+        .action-button.danger {
+            border-color: #704642;
+            color: #f3cbc1;
+            background: #482d2c;
+        }
+
+        .action-button.danger:hover:not(:disabled) {
+            background: #613633;
+        }
+
+        .action-button.subtle {
+            min-height: 36px;
+            border-color: #40545a;
+            color: #c1cfca;
+            background: #202e32;
+            font-size: 10px;
+        }
+
+        .button-stack {
+            display: grid;
+            gap: 8px;
+        }
+
+        .timer-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 0;
+            border-bottom: 1px solid #34464a;
+            color: #a8b7b2;
+            font-size: 11px;
+        }
+
+        .timer-row:last-child {
+            padding-bottom: 0;
+            border-bottom: 0;
+        }
+
+        .timer-value {
+            color: #e5eee7;
+            font: 11px 'DM Mono', monospace;
+        }
+
+        .timer-value.ready {
+            color: var(--mint);
+        }
+
+        .feed {
+            display: grid;
+            gap: 8px;
+            min-height: 37px;
+            color: #aab9b4;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .feed-entry {
+            display: flex;
+            gap: 8px;
+        }
+
+        .feed-time {
+            flex: 0 0 auto;
+            color: #778b8c;
+            font: 9px 'DM Mono', monospace;
+        }
+
+        .overlay {
+            position: fixed;
+            z-index: 5;
+            inset: 0;
+            display: grid;
+            overflow-y: auto;
+            padding: 22px;
+            place-items: center;
+            background: #081114d9;
+            backdrop-filter: blur(7px);
+        }
+
+        .dialog {
+            width: min(480px, 100%);
+            padding: clamp(24px, 5vw, 38px);
+            border: 1px solid #526d68;
+            border-radius: 8px;
+            background: #19282c;
+            box-shadow: 0 28px 100px #0009;
+            animation: arrive .24s ease-out;
+        }
+
+        @keyframes arrive {
+            from {
+                opacity: 0;
+                transform: translateY(9px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dialog-kicker {
+            margin: 0 0 8px;
+            color: var(--mint);
+            font: 10px 'DM Mono', monospace;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .dialog h1 {
+            margin: 0;
+            font: 800 clamp(36px, 9vw, 54px)/.9 'Barlow Condensed', sans-serif;
+            letter-spacing: 0;
+            text-transform: uppercase;
+        }
+
+        .dialog-copy {
+            margin: 15px 0 22px;
+            color: #afbfba;
+            font-size: 13px;
+            line-height: 1.65;
+        }
+
+        .briefing {
+            display: grid;
+            gap: 11px;
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 2px solid var(--mint);
+            background: #203236;
+        }
+
+        .role-picker {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            margin: 18px 0;
+        }
+
+        .role-choice {
+            min-width: 0;
+            padding: 12px;
+            border: 1px solid #40565a;
+            border-radius: 4px;
+            color: #dce8e1;
+            background: #1e3034;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .role-choice[aria-pressed="true"] {
+            border-color: var(--mint);
+            background: #28403d;
+            box-shadow: inset 0 0 0 1px #9fe3c633;
+        }
+
+        .role-choice strong,
+        .role-choice span {
+            display: block;
+        }
+
+        .role-choice strong {
+            font: 700 15px 'Barlow Condensed', sans-serif;
+            text-transform: uppercase;
+        }
+
+        .role-choice span {
+            margin-top: 5px;
+            color: #a8b7b2;
+            font-size: 10px;
+            line-height: 1.4;
+        }
+
+        .briefing-row {
+            display: flex;
+            gap: 11px;
+            color: #bdcbc5;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .briefing-row strong {
+            flex: 0 0 68px;
+            color: #eff4ed;
+            font: 10px 'DM Mono', monospace;
+            letter-spacing: .3px;
+            text-transform: uppercase;
+        }
+
+        .dialog .action-button {
+            min-height: 46px;
+            margin-top: 8px;
+        }
+
+        .meeting-list {
+            display: grid;
+            gap: 7px;
+            max-height: 310px;
+            overflow: auto;
+            margin: 18px 0;
+        }
+
+        .vote-choice {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px;
+            border: 1px solid #3b5053;
+            border-radius: 4px;
+            color: #e6eee8;
+            background: #1e3034;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .vote-choice:hover,
+        .vote-choice.selected {
+            border-color: var(--mint);
+            background: #28403d;
+        }
+
+        .vote-choice .crew-dot {
+            width: 13px;
+            height: 13px;
+        }
+
+        .vote-choice small {
+            margin-left: auto;
+            color: #99aaa5;
+            font: 9px 'DM Mono', monospace;
+        }
+
+        .task-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 7px;
+            margin: 22px 0;
+        }
+
+        .task-cell {
+            display: grid;
+            aspect-ratio: 1;
+            place-items: center;
+            border: 1px solid #425c58;
+            border-radius: 4px;
+            color: var(--mint);
+            background: #203c38;
+            font: 700 20px 'DM Mono', monospace;
+        }
+
+        .task-cell.off {
+            border-color: #3c4b50;
+            color: #768b87;
+            background: #202d31;
+        }
+
+        .task-readout {
+            min-height: 20px;
+            color: #a8cbb8;
+            font: 11px 'DM Mono', monospace;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 860px) {
+            .game-layout {
+                grid-template-columns: minmax(0, 1fr) 255px;
+                gap: 10px;
+            }
+
+            .panel {
+                padding: 13px;
+            }
+
+            .below-canvas {
+                font-size: 9px;
+            }
+        }
+
+        @media (max-width: 680px) {
+            .app {
+                padding: 13px 12px 22px;
+            }
+
+            .topbar {
+                margin-bottom: 13px;
+            }
+
+            .ship-status {
+                font-size: 9px;
+            }
+
+            .game-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .canvas-shell {
+                border-radius: 5px;
+            }
+
+            canvas {
+                aspect-ratio: 1.2;
+            }
+
+            .sidebar {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
+            }
+
+            .sidebar .panel:first-child,
+            .sidebar .roster-panel,
+            .sidebar .feed-panel {
+                grid-column: 1 / -1;
+            }
+
+            .sidebar .roster-panel {
+                order: 2;
+            }
+
+            .sidebar .actions-panel {
+                order: 3;
+            }
+
+            .sidebar .clock-panel {
+                order: 4;
+            }
+
+            .sidebar .feed-panel {
+                order: 5;
+            }
+
+            .objective-title {
+                font-size: 19px;
+            }
+
+            .interact-hint {
+                bottom: 9px;
+                font-size: 10px;
+            }
+        }
+
+        @media (max-width: 390px) {
+            .brand-name {
+                font-size: 20px;
+            }
+
+            .brand-sub {
+                font-size: 8px;
+            }
+
+            .status-text {
+                max-width: 110px;
+            }
+
+            .sidebar {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar .panel:first-child,
+            .sidebar .roster-panel,
+            .sidebar .feed-panel {
+                grid-column: auto;
+            }
+
+            .key-help {
+                gap: 7px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="app">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                        <path
+                            d="M7 5.5A3.5 3.5 0 0 1 10.5 2h3A3.5 3.5 0 0 1 17 5.5V8l2.1 1.8a3.4 3.4 0 0 1 1.2 2.6v4.1a3.5 3.5 0 0 1-3.5 3.5H8a5 5 0 0 1-5-5V9.4a4 4 0 0 1 4-4Z" />
+                        <path d="M7 8h10M8 20v2m8-2v2" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="brand-name">LAST LIGHT</p>
+                    <p class="brand-sub">a shipboard mystery</p>
+                </div>
+            </div>
+            <div class="ship-status"><span class="status-light" id="statusLight"></span><span class="status-text"
+                    id="statusText">VESSEL STABLE</span></div>
+        </header>
+
+        <section class="game-layout" aria-label="Game">
+            <div class="game-main">
+                <div class="canvas-shell">
+                    <canvas id="gameCanvas" aria-label="Top-down view of the ship and its crew"></canvas>
+                    <div class="canvas-topline"><span class="canvas-tag" id="locationTag">ORBITAL / DECK 03</span><span
+                            class="canvas-tag" id="roundTag">SHIFT 01</span></div>
+                    <div class="interact-hint" id="interactHint"><kbd>E</kbd><span id="hintText">Interact</span></div>
+                </div>
+                <div class="below-canvas">
+                    <div class="key-help"><span><kbd>WASD</kbd> move</span><span><kbd>E</kbd>
+                            interact</span><span><kbd>R</kbd> report</span><span><kbd>F</kbd> lights</span></div>
+                    <span>SECTOR 7 · 2189</span>
+                </div>
+            </div>
+
+            <aside class="sidebar" aria-label="Mission controls">
+                <section class="panel">
+                    <p class="eyebrow">Current objective</p>
+                    <h2 class="objective-title" id="objectiveTitle">Awaiting assignment</h2>
+                    <p class="objective-copy" id="objectiveCopy">A routine shift. Probably.</p>
+                    <div class="progress-track">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-label"><span id="progressLabel">TASKS</span><span id="progressCount">0 /
+                            3</span></div>
+                </section>
+
+                <section class="panel roster-panel">
+                    <p class="eyebrow">Crew manifest</p>
+                    <div class="roster" id="roster"></div>
+                </section>
+
+                <section class="panel actions-panel">
+                    <p class="eyebrow">Ship controls</p>
+                    <div class="button-stack">
+                        <button class="action-button danger" id="killButton" disabled
+                            aria-label="Eliminate nearby crew member">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                                <path d="M12 3 3 20h18L12 3Z" />
+                                <path d="M12 9v5m0 3h.01" />
+                            </svg><span>Eliminate</span>
+                        </button>
+                        <button class="action-button subtle hidden" id="sabotageButton" disabled
+                            aria-label="Sabotage the ship lights">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                                <path
+                                    d="M9 18h6m-5 3h4m-2-19a7 7 0 0 0-4 12.75c.6.4 1 1.05 1 1.75h6c0-.7.4-1.35 1-1.75A7 7 0 0 0 12 2Z" />
+                                <path d="m10 8 4 3-3 1 3 3" />
+                            </svg><span>Sabotage lights</span>
+                        </button>
+                        <button class="action-button" id="reportButton" disabled aria-label="Report a nearby body">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                                <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z" />
+                                <path d="M12 8v5m0 3h.01" />
+                            </svg><span>Report body</span>
+                        </button>
+                        <button class="action-button subtle" id="mapButton" aria-label="Toggle map view">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                                <path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z" />
+                                <path d="M9 3v15m6-12v15" />
+                            </svg><span>Toggle map</span>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="panel clock-panel">
+                    <p class="eyebrow">Ship systems</p>
+                    <div class="timer-row"><span>Life support</span><span class="timer-value"
+                            id="lifeSupport">ONLINE</span></div>
+                    <div class="timer-row"><span>Lighting</span><span class="timer-value ready"
+                            id="lightStatus">ONLINE</span></div>
+                    <div class="timer-row"><span>Emergency calls</span><span class="timer-value"
+                            id="emergencyCount">1</span></div>
+                </section>
+
+                <section class="panel feed-panel">
+                    <p class="eyebrow">Comms log</p>
+                    <div class="feed" id="feed" aria-live="polite"></div>
+                </section>
+            </aside>
+        </section>
+    </main>
+
+    <div class="overlay" id="startOverlay">
+        <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="startTitle">
+            <p class="dialog-kicker">Deep-space vessel · shift 01</p>
+            <h1 id="startTitle">Someone is<br>not who they say.</h1>
+            <p class="dialog-copy">The lights dipped for eleven seconds. Now the crew is one too many, and every airlock
+                is sealed. Choose your role before the shift begins.</p>
+            <div class="role-picker" role="group" aria-label="Choose your role">
+                <button class="role-choice" type="button" data-role="crew" aria-pressed="true">
+                    <strong>Crewmate</strong><span>Repair the ship and find the infiltrator.</span>
+                </button>
+                <button class="role-choice" type="button" data-role="infiltrator" aria-pressed="false">
+                    <strong>Infiltrator</strong><span>Eliminate the crew and avoid suspicion.</span>
+                </button>
+            </div>
+            <div class="briefing">
+                <div class="briefing-row"><strong>As crew</strong><span>Finish six ship tasks. Watch the crew. Report
+                        anything suspicious.</span></div>
+                <div class="briefing-row"><strong>As infiltrator</strong><span>Quietly remove the crew before they
+                        finish their work. Don’t get caught.</span></div>
+                <div class="briefing-row"><strong>Controls</strong><span>WASD to move · E to use a console · R to report
+                        a body.</span></div>
+            </div>
+            <button class="action-button" id="startButton">Begin shift <span aria-hidden="true">→</span></button>
+        </section>
+    </div>
+
+    <div class="overlay hidden" id="taskOverlay">
+        <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="taskTitle">
+            <p class="dialog-kicker" id="taskKicker">Ship console</p>
+            <h1 id="taskTitle">Restore<br>the sequence.</h1>
+            <p class="dialog-copy" id="taskCopy">Repeat the signal by selecting the lit panels in order.</p>
+            <div class="task-grid" id="taskGrid"></div>
+            <div class="task-readout" id="taskReadout" aria-live="polite">Ready when you are.</div>
+            <button class="action-button" id="closeTaskButton">Step away</button>
+        </section>
+    </div>
+
+    <div class="overlay hidden" id="meetingOverlay">
+        <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="meetingTitle">
+            <p class="dialog-kicker">Emergency assembly</p>
+            <h1 id="meetingTitle">Who do you<br>suspect?</h1>
+            <p class="dialog-copy" id="meetingCopy">The crew gathers around the table. Choose a suspect, or skip the
+                vote.</p>
+            <div class="meeting-list" id="meetingList"></div>
+            <button class="action-button" id="voteButton" disabled>Cast vote</button>
+        </section>
+    </div>
+
+    <div class="overlay hidden" id="endOverlay">
+        <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="endTitle">
+            <p class="dialog-kicker" id="endKicker">Shift report</p>
+            <h1 id="endTitle">The signal<br>goes quiet.</h1>
+            <p class="dialog-copy" id="endCopy"></p>
+            <button class="action-button" id="restartButton">Start another shift <span
+                    aria-hidden="true">↻</span></button>
+        </section>
+    </div>
+
+    <script>
+        (() => {
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const hint = document.getElementById('interactHint');
+            const hintText = document.getElementById('hintText');
+            const taskNames = ['Calibrate navigation', 'Align the signal', 'Prime the reactor', 'Restore life support', 'Sort cargo manifest', 'Tune electrical grid'];
+            const crewData = [
+                { name: 'Marlow', color: '#e87959' },
+                { name: 'Sable', color: '#77b8cc' },
+                { name: 'Ivo', color: '#d2b65c' },
+                { name: 'Neri', color: '#bc91c4' },
+                { name: 'Pax', color: '#86bd83' }
+            ];
+            const rooms = [
+                { x: 45, y: 56, width: 240, height: 160, name: 'NAVIGATION', accent: '#92d5b6' },
+                { x: 360, y: 56, width: 240, height: 160, name: 'CAFETERIA', accent: '#e6c978' },
+                { x: 675, y: 54, width: 238, height: 160, name: 'COMMUNICATIONS', accent: '#ddaf72' },
+                { x: 45, y: 250, width: 240, height: 112, name: 'SECURITY', accent: '#a7c7dd' },
+                { x: 675, y: 250, width: 238, height: 112, name: 'ELECTRICAL', accent: '#e49b71' },
+                { x: 47, y: 390, width: 246, height: 150, name: 'MED BAY', accent: '#a7c7dd' },
+                { x: 360, y: 390, width: 240, height: 150, name: 'CARGO BAY', accent: '#d2b65c' },
+                { x: 663, y: 390, width: 250, height: 150, name: 'REACTOR', accent: '#db8374' }
+            ];
+            const observationRoom = { x: 343, y: 215, width: 274, height: 172, name: 'OBSERVATION' };
+            const consolePoints = [
+                { x: .17, y: .25, name: taskNames[0], icon: 'N', room: 'NAVIGATION' },
+                { x: .80, y: .25, name: taskNames[1], icon: '↗', room: 'COMMUNICATIONS' },
+                { x: .80, y: .77, name: taskNames[2], icon: 'ϟ', room: 'REACTOR' },
+                { x: .17, y: .77, name: taskNames[3], icon: '+', room: 'MED BAY' },
+                { x: .50, y: .77, name: taskNames[4], icon: '□', room: 'CARGO BAY' },
+                { x: .80, y: .51, name: taskNames[5], icon: 'ϟ', room: 'ELECTRICAL' }
+            ];
+            const player = { x: .48, y: .55, speed: .22, color: '#f0eee1', alive: true };
+            const keys = new Set();
+            let crew = [];
+            let bodies = [];
+            let impostor = null;
+            let isImpostor = false;
+            let selectedRole = 'crew';
+            let roundActive = false;
+            let mapOpen = false;
+            let completedTasks = 0;
+            let emergencyCalls = 1;
+            let killCooldown = 0;
+            let lastKill = 0;
+            let lastNpcKill = 0;
+            let blackoutTimer = 0;
+            let sabotageCooldown = 0;
+            let lastNpcSabotage = 0;
+            let lastMeeting = 0;
+            let nearestConsole = null;
+            let selectedVote = null;
+            let taskSequence = [];
+            let taskInput = [];
+            let taskLocked = false;
+            let tick = 0;
+            let lastFrame = performance.now();
+            let dpr = 1;
+            let viewWidth = 960;
+            let viewHeight = 600;
+            let resizeTimer = 0;
+
+            function distance(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+
+            function resizeCanvas() {
+                const bounds = canvas.getBoundingClientRect();
+                if (!bounds.width || !bounds.height) return;
+                dpr = Math.min(window.devicePixelRatio || 1, 2);
+                canvas.width = Math.round(bounds.width * dpr);
+                canvas.height = Math.round(bounds.height * dpr);
+                viewWidth = bounds.width;
+                viewHeight = bounds.height;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+
+            function roundedRect(x, y, width, height, radius, fill, stroke) {
+                ctx.beginPath();
+                ctx.roundRect(x, y, width, height, radius);
+                if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+                if (stroke) { ctx.strokeStyle = stroke; ctx.stroke(); }
+            }
+
+            function drawRoom(x, y, width, height, label, accent) {
+                roundedRect(x, y, width, height, 15, '#354642', '#75827a');
+                roundedRect(x + 5, y + 5, width - 10, height - 10, 11, '#42534d', '#52655d');
+                ctx.fillStyle = '#bbc9b4';
+                ctx.font = '10px "DM Mono", monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText(label, x + 17, y + 21);
+                ctx.fillStyle = accent;
+                ctx.fillRect(x + 17, y + 27, Math.min(35, width * .25), 2);
+                ctx.globalAlpha = .18;
+                ctx.strokeStyle = '#c2d4c3';
+                ctx.lineWidth = 1;
+                for (let px = x + 18; px < x + width - 12; px += 23) {
+                    ctx.beginPath(); ctx.moveTo(px, y + 43); ctx.lineTo(px, y + height - 14); ctx.stroke();
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            function drawBackground(w, h) {
+                const sx = w / 960;
+                const sy = h / 600;
+                ctx.save();
+                ctx.scale(sx, sy);
+                ctx.fillStyle = '#192526';
+                ctx.fillRect(0, 0, 960, 600);
+                ctx.fillStyle = '#23312f';
+                ctx.fillRect(12, 12, 936, 576);
+
+                ctx.strokeStyle = '#65766f';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 8]);
+                ctx.strokeRect(25, 25, 910, 550);
+                ctx.setLineDash([]);
+
+                rooms.forEach(room => drawRoom(room.x, room.y, room.width, room.height, room.name, room.accent));
+
+                roundedRect(343, 215, 274, 172, 19, '#354642', '#75827a');
+                roundedRect(349, 221, 262, 160, 15, '#40524d', '#53665f');
+                ctx.fillStyle = '#c1cbbd';
+                ctx.font = '10px "DM Mono", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('OBSERVATION', 480, 244);
+
+                ctx.strokeStyle = '#566861';
+                ctx.lineWidth = 17;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(165, 216); ctx.lineTo(165, 250);
+                ctx.moveTo(165, 362); ctx.lineTo(165, 390);
+                ctx.moveTo(795, 214); ctx.lineTo(795, 250);
+                ctx.moveTo(795, 362); ctx.lineTo(795, 390);
+                ctx.moveTo(480, 216); ctx.lineTo(480, 215);
+                ctx.moveTo(480, 387); ctx.lineTo(480, 390);
+                ctx.moveTo(285, 306); ctx.lineTo(343, 306);
+                ctx.moveTo(617, 306); ctx.lineTo(675, 306);
+                ctx.stroke();
+
+                ctx.strokeStyle = '#344742';
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(45, 299); ctx.lineTo(914, 299); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(480, 391); ctx.lineTo(480, 539); ctx.stroke();
+
+                for (let i = 0; i < 13; i++) {
+                    const x = 94 + i * 64;
+                    ctx.fillStyle = i % 2 ? '#41534e' : '#455951';
+                    ctx.fillRect(x, 42, 18, 5);
+                    ctx.fillRect(x, 553, 18, 5);
+                }
+
+                roundedRect(423, 269, 114, 62, 12, '#2c3d39', '#85948a');
+                roundedRect(439, 279, 82, 40, 7, '#314b43', '#789284');
+                ctx.fillStyle = '#a6dfbb';
+                ctx.globalAlpha = .75 + Math.sin(tick * 4) * .15;
+                ctx.fillRect(452, 290, 56, 3);
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = '#c4d0c4';
+                ctx.font = '8px "DM Mono", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('EMERGENCY', 480, 307);
+
+                for (const consolePoint of consolePoints) {
+                    const x = consolePoint.x * 960;
+                    const y = consolePoint.y * 600;
+                    ctx.fillStyle = '#253833';
+                    ctx.beginPath(); ctx.ellipse(x, y + 8, 27, 13, 0, 0, Math.PI * 2); ctx.fill();
+                    roundedRect(x - 19, y - 18, 38, 32, 5, '#253a35', '#a0b39d');
+                    roundedRect(x - 13, y - 12, 26, 16, 3, '#59756a', '#b9d3b3');
+                    ctx.fillStyle = '#e4e0ba';
+                    ctx.font = 'bold 12px "DM Mono", monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(consolePoint.icon, x, y);
+                    if (roundActive && !isImpostor && completedTasks < taskNames.length && taskNames[completedTasks] === consolePoint.name) {
+                        const pulse = 1 + Math.sin(tick * 3) * .09;
+                        ctx.strokeStyle = 'rgba(159, 227, 198, .74)';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath(); ctx.arc(x, y - 2, 31 * pulse, 0, Math.PI * 2); ctx.stroke();
+                    }
+                }
+
+                ctx.restore();
+            }
+
+            function drawCharacter(character, x, y, { playerCharacter = false, dead = false, suspect = false } = {}) {
+                const unit = viewWidth / 960;
+                const px = x * 960 * unit;
+                const py = y * 600 * unit;
+                const sway = Math.sin(tick * 7 + (character.offset || 0)) * 1.7 * unit;
+                const bodyColor = dead ? '#727775' : character.color;
+                ctx.save();
+                ctx.translate(px, py + sway);
+                ctx.scale(unit, unit);
+                if (suspect) {
+                    ctx.strokeStyle = '#f3c870';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.arc(0, -1, 22, 0, Math.PI * 2); ctx.stroke();
+                }
+                if (playerCharacter) {
+                    ctx.fillStyle = '#e4e6d5';
+                    ctx.beginPath(); ctx.ellipse(0, 18, 17, 5, 0, 0, Math.PI * 2); ctx.fill();
+                }
+                ctx.fillStyle = bodyColor;
+                ctx.beginPath();
+                ctx.roundRect(-12, -10, 24, 28, [10, 10, 6, 6]);
+                ctx.fill();
+                ctx.fillStyle = dead ? '#4a5050' : '#becdca';
+                ctx.beginPath(); ctx.roundRect(-8, -12, 16, 12, 5); ctx.fill();
+                ctx.fillStyle = dead ? '#727c7a' : '#6a9294';
+                ctx.beginPath(); ctx.roundRect(-6, -10, 12, 8, 4); ctx.fill();
+                ctx.fillStyle = '#d6e7df';
+                ctx.beginPath(); ctx.ellipse(0, 17, 5, 2, 0, 0, Math.PI * 2); ctx.fill();
+                if (playerCharacter) {
+                    ctx.fillStyle = '#24322f';
+                    ctx.font = 'bold 9px "DM Mono", monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('YOU', 0, 32);
+                } else if (character.working) {
+                    ctx.fillStyle = '#d7e7dc';
+                    ctx.font = 'bold 9px "DM Mono", monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('···', 0, -17);
+                }
+                ctx.restore();
+            }
+
+            function drawBody(body) {
+                const unit = viewWidth / 960;
+                const px = body.x * 960 * unit;
+                const py = body.y * 600 * unit;
+                ctx.save();
+                ctx.translate(px, py);
+                ctx.scale(unit, unit);
+                ctx.fillStyle = '#10191888';
+                ctx.beginPath(); ctx.ellipse(0, 8, 16, 6, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#f16e62'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(0, 0, 19 + Math.sin(tick * 4) * 2, 0, Math.PI * 2); ctx.stroke();
+                ctx.fillStyle = body.color;
+                ctx.beginPath(); ctx.roundRect(-13, -6, 26, 13, 6); ctx.fill();
+                ctx.fillStyle = '#8ba5a4';
+                ctx.beginPath(); ctx.roundRect(-5, -9, 12, 7, 3); ctx.fill();
+                ctx.restore();
+            }
+
+            function drawMapOverlay() {
+                ctx.fillStyle = '#10191ddf';
+                ctx.fillRect(0, 0, viewWidth, viewHeight);
+                const sx = viewWidth / 960;
+                const sy = viewHeight / 600;
+                ctx.save(); ctx.scale(sx, sy);
+                ctx.strokeStyle = '#8da09a'; ctx.lineWidth = 3; ctx.strokeRect(25, 25, 910, 550);
+                ctx.strokeStyle = '#576b65'; ctx.lineWidth = 2;
+                rooms.forEach(room => {
+                    ctx.strokeRect(room.x, room.y, room.width, room.height);
+                    ctx.fillStyle = '#a7b7ae';
+                    ctx.font = '9px "DM Mono", monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(room.name, room.x + room.width / 2, room.y + 20);
+                });
+                ctx.strokeRect(343, 215, 274, 172);
+                ctx.fillStyle = '#e0ebe1'; ctx.font = '15px "DM Mono", monospace'; ctx.textAlign = 'center';
+                ctx.fillText('SHIP DECK / 03', 480, 42);
+                ctx.font = '9px "DM Mono", monospace'; ctx.fillStyle = '#a7b7ae';
+                ctx.fillText('OBSERVATION', 480, 275);
+                for (const point of consolePoints) {
+                    ctx.fillStyle = taskNames.indexOf(point.name) < completedTasks ? '#81918a' : '#9fe3c6';
+                    ctx.beginPath(); ctx.arc(point.x * 960, point.y * 600, 8, 0, Math.PI * 2); ctx.fill();
+                }
+                for (const member of crew) {
+                    if (!member.alive) continue;
+                    ctx.fillStyle = member.color;
+                    ctx.beginPath(); ctx.arc(member.x * 960, member.y * 600, 7, 0, Math.PI * 2); ctx.fill();
+                }
+                ctx.fillStyle = player.color;
+                ctx.beginPath(); ctx.arc(player.x * 960, player.y * 600, 10, 0, Math.PI * 2); ctx.fill();
+                ctx.restore();
+            }
+
+            function draw() {
+                const w = viewWidth;
+                const h = viewHeight;
+                ctx.clearRect(0, 0, w, h);
+                drawBackground(w, h);
+                for (const body of bodies) drawBody(body);
+                for (const member of crew) {
+                    if (member.alive) drawCharacter(member, member.x, member.y, { suspect: member === impostor && isImpostor, working: member.working });
+                }
+                drawCharacter(player, player.x, player.y, { playerCharacter: true });
+                if (mapOpen) drawMapOverlay();
+                drawRoomFog();
+            }
+
+            function getPlayerRoom() {
+                const playerX = player.x * 960;
+                const playerY = player.y * 600;
+                return [...rooms, observationRoom].find(room =>
+                    playerX >= room.x && playerX <= room.x + room.width &&
+                    playerY >= room.y && playerY <= room.y + room.height
+                );
+            }
+
+            function drawRoomFog() {
+                if (!roundActive) return;
+                if (blackoutTimer > 0) {
+                    if (!isImpostor) {
+                        ctx.fillStyle = '#020505';
+                        ctx.fillRect(0, 0, viewWidth, viewHeight);
+                    }
+                    return;
+                }
+                if (mapOpen) return;
+                const visibleRoom = getPlayerRoom();
+                const scaleX = viewWidth / 960;
+                const scaleY = viewHeight / 600;
+                ctx.save();
+                ctx.fillStyle = 'rgba(4, 9, 10, .88)';
+                ctx.beginPath();
+                ctx.rect(0, 0, viewWidth, viewHeight);
+                if (visibleRoom) {
+                    ctx.roundRect(
+                        visibleRoom.x * scaleX + 5,
+                        visibleRoom.y * scaleY + 5,
+                        (visibleRoom.width - 10) * scaleX,
+                        (visibleRoom.height - 10) * scaleY,
+                        12 * scaleX
+                    );
+                } else {
+                    ctx.arc(player.x * viewWidth, player.y * viewHeight, 68 * scaleX, 0, Math.PI * 2);
+                }
+                ctx.fill('evenodd');
+                ctx.restore();
+            }
+
+            function addFeed(message) {
+                const feed = document.getElementById('feed');
+                const time = new Date();
+                const stamp = `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`;
+                const entry = document.createElement('div');
+                entry.className = 'feed-entry';
+                const timeLabel = document.createElement('span');
+                timeLabel.className = 'feed-time';
+                timeLabel.textContent = stamp;
+                const text = document.createElement('span');
+                text.textContent = message;
+                entry.append(timeLabel, text);
+                feed.prepend(entry);
+                while (feed.children.length > 4) feed.lastElementChild.remove();
+            }
+
+            function triggerLightsSabotage(byPlayer) {
+                if (byPlayer && (!isImpostor || blackoutTimer > 0 || sabotageCooldown > 0)) return;
+                blackoutTimer = 9;
+                if (byPlayer) sabotageCooldown = 28;
+                else lastNpcSabotage = performance.now();
+                addFeed(byPlayer ? 'You cut the ship lights.' : 'The ship lights were sabotaged.');
+            }
+
+            function randomTarget(member) {
+                const point = consolePoints[member.taskIndex % consolePoints.length];
+                member.target = { x: point.x, y: point.y + .045 };
+                member.wait = 0;
+            }
+
+            function updateRoster() {
+                const roster = document.getElementById('roster');
+                roster.replaceChildren();
+                for (const member of crew) {
+                    const row = document.createElement('div');
+                    row.className = 'crew-row';
+                    const dot = document.createElement('span'); dot.className = 'crew-dot'; dot.style.background = member.color;
+                    const name = document.createElement('span'); name.className = 'crew-name'; name.textContent = member.name;
+                    const state = document.createElement('span'); state.className = `crew-state${member.alive ? '' : ' dead'}`; state.textContent = member.alive ? 'aboard' : 'lost';
+                    row.append(dot, name, state);
+                    roster.append(row);
+                }
+                const playerRow = document.createElement('div'); playerRow.className = 'crew-row';
+                const dot = document.createElement('span'); dot.className = 'crew-dot'; dot.style.background = player.color;
+                const name = document.createElement('span'); name.className = 'crew-name'; name.textContent = 'You';
+                const state = document.createElement('span'); state.className = 'crew-state'; state.textContent = isImpostor ? 'classified' : 'aboard';
+                playerRow.append(dot, name, state); roster.append(playerRow);
+            }
+
+            function updateObjective() {
+                const title = document.getElementById('objectiveTitle');
+                const copy = document.getElementById('objectiveCopy');
+                const label = document.getElementById('progressLabel');
+                const count = document.getElementById('progressCount');
+                const fill = document.getElementById('progressFill');
+                if (isImpostor) {
+                    const alive = crew.filter(member => member.alive).length;
+                    title.textContent = 'Thin the crew.';
+                    copy.textContent = 'Stay close to someone alone. Eliminate the crew before they finish their work.';
+                    label.textContent = 'CREW REMAINING';
+                    count.textContent = `${alive} / 5`;
+                    fill.style.width = `${(5 - alive) / 5 * 100}%`;
+                    fill.style.background = 'var(--red)';
+                } else {
+                    title.textContent = completedTasks === taskNames.length ? 'Shift complete.' : taskNames[completedTasks] || 'Stay sharp.';
+                    copy.textContent = completedTasks === taskNames.length ? 'The ship is back online. Keep an eye out for the infiltrator.' : 'Finish ship maintenance. Report a body if you find one.';
+                    label.textContent = 'TASKS COMPLETE';
+                    count.textContent = `${completedTasks} / ${taskNames.length}`;
+                    fill.style.width = `${completedTasks / taskNames.length * 100}%`;
+                    fill.style.background = 'var(--mint)';
+                }
+            }
+
+            function showEnd(won, reason) {
+                roundActive = false;
+                document.getElementById('endKicker').textContent = won ? 'Shift report · survived' : 'Shift report · lost';
+                document.getElementById('endTitle').innerHTML = won ? 'The ship<br>holds steady.' : 'The signal<br>goes quiet.';
+                document.getElementById('endCopy').textContent = reason;
+                document.getElementById('endOverlay').classList.remove('hidden');
+                document.getElementById('statusText').textContent = won ? 'SHIFT COMPLETE' : 'VESSEL COMPROMISED';
+                document.getElementById('statusLight').style.background = won ? 'var(--mint)' : 'var(--red)';
+            }
+
+            function checkEndConditions() {
+                const alive = crew.filter(member => member.alive).length;
+                if (isImpostor && alive <= 2) {
+                    showEnd(true, 'With the crew outnumbered, the ship falls silent. Your cover holds.');
+                    return true;
+                }
+                if (!isImpostor && completedTasks >= taskNames.length) {
+                    showEnd(true, 'Ship systems are back online. The infiltrator is still somewhere on board.');
+                    return true;
+                }
+                if (!isImpostor && alive <= 2) {
+                    showEnd(false, 'The crew has been reduced to two. The infiltrator takes the ship.');
+                    return true;
+                }
+                if (isImpostor && completedTasks >= taskNames.length) {
+                    showEnd(false, 'The crew finishes the repair sequence and locks down the ship.');
+                    return true;
+                }
+                return false;
+            }
+
+            function startRound() {
+                crew = crewData.map((member, index) => ({
+                    ...member,
+                    x: [.32, .38, .59, .64, .48][index],
+                    y: [.30, .67, .36, .62, .78][index],
+                    alive: true,
+                    offset: index * 2.1,
+                    taskIndex: index % consolePoints.length,
+                    target: null,
+                    wait: 0,
+                    working: false
+                }));
+                crew.forEach(randomTarget);
+                bodies = [];
+                player.x = .48; player.y = .55; player.alive = true;
+                isImpostor = selectedRole === 'infiltrator';
+                impostor = isImpostor ? player : crew[Math.floor(Math.random() * crew.length)];
+                completedTasks = 0;
+                emergencyCalls = 1;
+                killCooldown = 0;
+                lastKill = 0;
+                lastNpcKill = 0;
+                blackoutTimer = 0;
+                sabotageCooldown = 0;
+                lastNpcSabotage = performance.now();
+                lastMeeting = 0;
+                roundActive = true;
+                mapOpen = false;
+                keys.clear();
+                document.getElementById('feed').replaceChildren();
+                document.getElementById('emergencyCount').textContent = emergencyCalls;
+                document.getElementById('statusText').textContent = 'VESSEL STABLE';
+                document.getElementById('statusLight').style.background = 'var(--mint)';
+                document.getElementById('lightStatus').textContent = 'ONLINE';
+                document.getElementById('lightStatus').classList.add('ready');
+                document.getElementById('sabotageButton').classList.toggle('hidden', !isImpostor);
+                document.getElementById('roundTag').textContent = `SHIFT ${String(1 + Math.floor(Math.random() * 9)).padStart(2, '0')}`;
+                document.getElementById('startOverlay').classList.add('hidden');
+                document.getElementById('taskOverlay').classList.add('hidden');
+                document.getElementById('meetingOverlay').classList.add('hidden');
+                document.getElementById('endOverlay').classList.add('hidden');
+                updateRoster();
+                updateObjective();
+                addFeed(isImpostor ? 'Crew manifest loaded. Keep your cover.' : 'Crew manifest loaded. One signal is unaccounted for.');
+                resizeCanvas();
+            }
+
+            function findNearbyConsole() {
+                if (isImpostor || completedTasks >= taskNames.length) return null;
+                const current = consolePoints[completedTasks];
+                return distance(player, current) < .075 ? current : null;
+            }
+
+            function nearestBodyForPlayer() {
+                return bodies.filter(body => distance(player, body) < .09).sort((a, b) => distance(player, a) - distance(player, b))[0] || null;
+            }
+
+            function nearestVictim() {
+                return crew.filter(member => member.alive).sort((a, b) => distance(player, a) - distance(player, b))[0] || null;
+            }
+
+            function drawTaskSequence() {
+                const grid = document.getElementById('taskGrid');
+                grid.replaceChildren();
+                for (let i = 0; i < 8; i++) {
+                    const cell = document.createElement('button');
+                    cell.className = 'task-cell off';
+                    cell.type = 'button';
+                    cell.textContent = ['+', '−', '×', '÷'][i % 4];
+                    cell.setAttribute('aria-label', `Signal panel ${i + 1}`);
+                    cell.addEventListener('click', () => selectTaskCell(i, cell));
+                    grid.append(cell);
+                }
+            }
+
+            function openTask(consolePoint) {
+                if (!roundActive || isImpostor || taskLocked) return;
+                document.getElementById('taskKicker').textContent = consolePoint.room;
+                document.getElementById('taskTitle').innerHTML = `${consolePoint.name.split(' ').slice(0, -1).join(' ')}<br>${consolePoint.name.split(' ').at(-1)}.`;
+                taskSequence = Array.from({ length: 3 }, () => Math.floor(Math.random() * 8));
+                taskInput = [];
+                taskLocked = true;
+                drawTaskSequence();
+                document.getElementById('taskReadout').textContent = 'Watch the panels. Remember the signal.';
+                document.getElementById('taskOverlay').classList.remove('hidden');
+                window.setTimeout(() => {
+                    if (document.getElementById('taskOverlay').classList.contains('hidden')) return;
+                    const cells = document.querySelectorAll('.task-cell');
+                    taskSequence.forEach((index, step) => window.setTimeout(() => {
+                        cells[index].classList.remove('off');
+                        window.setTimeout(() => cells[index].classList.add('off'), 370);
+                    }, 550 + step * 640));
+                    window.setTimeout(() => {
+                        document.getElementById('taskReadout').textContent = 'Repeat the signal.';
+                        taskLocked = false;
+                    }, 550 + taskSequence.length * 640);
+                }, 250);
+            }
+
+            function selectTaskCell(index, cell) {
+                if (taskLocked || document.getElementById('taskOverlay').classList.contains('hidden')) return;
+                cell.classList.remove('off');
+                window.setTimeout(() => cell.classList.add('off'), 180);
+                taskInput.push(index);
+                const expected = taskSequence[taskInput.length - 1];
+                if (index !== expected) {
+                    taskInput = [];
+                    document.getElementById('taskReadout').textContent = 'Signal mismatch. Try again.';
+                    return;
+                }
+                if (taskInput.length === taskSequence.length) {
+                    taskLocked = true;
+                    completedTasks += 1;
+                    document.getElementById('taskReadout').textContent = 'Sequence restored.';
+                    updateObjective();
+                    addFeed(`${taskNames[completedTasks - 1]} restored.`);
+                    window.setTimeout(() => {
+                        document.getElementById('taskOverlay').classList.add('hidden');
+                        taskLocked = false;
+                        checkEndConditions();
+                    }, 800);
+                }
+            }
+
+            function attemptKill() {
+                if (!roundActive || !isImpostor || killCooldown > 0) return;
+                const victim = nearestVictim();
+                if (!victim || distance(player, victim) > .075) return;
+                victim.alive = false;
+                bodies.push({ x: victim.x, y: victim.y, name: victim.name, color: victim.color, time: performance.now() });
+                killCooldown = 13;
+                lastKill = performance.now();
+                addFeed(`${victim.name} signal lost.`);
+                updateRoster();
+                updateObjective();
+                checkEndConditions();
+            }
+
+            function reportBody(body) {
+                if (!roundActive || !body) return;
+                bodies = bodies.filter(item => item !== body);
+                lastMeeting = performance.now();
+                addFeed(`Emergency assembly called. ${body.name} found.`);
+                openMeeting(`${body.name} was found near ${nearestRoom(body)}. Discuss and vote.`);
+            }
+
+            function nearestRoom(body) {
+                const nearest = consolePoints.reduce((best, point) => distance(body, point) < distance(body, best) ? point : best, consolePoints[0]);
+                return nearest.room.toLowerCase();
+            }
+
+            function openMeeting(copy) {
+                blackoutTimer = 0;
+                selectedVote = null;
+                document.getElementById('meetingCopy').textContent = copy;
+                const list = document.getElementById('meetingList');
+                list.replaceChildren();
+                const suspects = crew.filter(member => member.alive);
+                if (player.alive) suspects.push({ name: 'You', color: player.color, alive: true, player: true });
+                suspects.forEach(suspect => {
+                    const button = document.createElement('button');
+                    button.className = 'vote-choice'; button.type = 'button';
+                    const dot = document.createElement('span'); dot.className = 'crew-dot'; dot.style.background = suspect.color;
+                    const name = document.createElement('span'); name.textContent = suspect.name;
+                    const label = document.createElement('small'); label.textContent = suspect.player ? 'SELF' : 'CREW';
+                    button.append(dot, name, label);
+                    button.addEventListener('click', () => {
+                        selectedVote = suspect;
+                        list.querySelectorAll('.vote-choice').forEach(choice => choice.classList.remove('selected'));
+                        button.classList.add('selected');
+                        document.getElementById('voteButton').disabled = false;
+                    });
+                    list.append(button);
+                });
+                const skip = document.createElement('button');
+                skip.className = 'vote-choice'; skip.type = 'button'; skip.innerHTML = '<span style="width:13px"></span><span>Skip vote</span><small>NO EJECTION</small>';
+                skip.addEventListener('click', () => {
+                    selectedVote = { skip: true };
+                    list.querySelectorAll('.vote-choice').forEach(choice => choice.classList.remove('selected'));
+                    skip.classList.add('selected');
+                    document.getElementById('voteButton').disabled = false;
+                });
+                list.append(skip);
+                document.getElementById('voteButton').disabled = true;
+                document.getElementById('meetingOverlay').classList.remove('hidden');
+            }
+
+            function castVote() {
+                if (!selectedVote) return;
+                document.getElementById('meetingOverlay').classList.add('hidden');
+                emergencyCalls = Math.max(0, emergencyCalls - 1);
+                document.getElementById('emergencyCount').textContent = emergencyCalls;
+                if (selectedVote.skip) {
+                    addFeed('Vote skipped. Nobody was ejected.');
+                } else if (selectedVote.player) {
+                    showEnd(false, 'The crew votes you out of the airlock. The mystery is solved, just not in your favor.');
+                    return;
+                } else if (selectedVote === impostor) {
+                    selectedVote.alive = false;
+                    updateRoster();
+                    addFeed(`${selectedVote.name} was the infiltrator.`);
+                    showEnd(true, `${selectedVote.name} was the infiltrator. The crew takes back the ship.`);
+                    return;
+                } else {
+                    selectedVote.alive = false;
+                    updateRoster();
+                    addFeed(`${selectedVote.name} was not the infiltrator.`);
+                    if (checkEndConditions()) return;
+                }
+                if (isImpostor && crew.filter(member => member.alive).length > 2 && performance.now() - lastKill > 18000) {
+                    window.setTimeout(() => {
+                        if (!roundActive) return;
+                        const next = crew.find(member => member.alive && member !== impostor);
+                        if (next) {
+                            next.alive = false;
+                            bodies.push({ x: next.x, y: next.y, name: next.name, color: next.color, time: performance.now() });
+                            addFeed(`${next.name} signal lost during the vote.`);
+                            updateRoster(); updateObjective(); checkEndConditions();
+                        }
+                    }, 3500);
+                }
+            }
+
+            function update(delta) {
+                if (!roundActive) return;
+                const step = Math.min(delta, .04);
+                tick += step;
+                blackoutTimer = Math.max(0, blackoutTimer - step);
+                sabotageCooldown = Math.max(0, sabotageCooldown - step);
+                if (!isImpostor && impostor?.alive && blackoutTimer <= 0 && performance.now() - lastNpcSabotage >= 35000) {
+                    triggerLightsSabotage(false);
+                }
+                const speed = player.speed * step;
+                let dx = 0, dy = 0;
+                if (keys.has('w') || keys.has('arrowup')) dy -= speed;
+                if (keys.has('s') || keys.has('arrowdown')) dy += speed;
+                if (keys.has('a') || keys.has('arrowleft')) dx -= speed;
+                if (keys.has('d') || keys.has('arrowright')) dx += speed;
+                if (dx && dy) { dx *= .707; dy *= .707; }
+                player.x = Math.max(.055, Math.min(.945, player.x + dx));
+                player.y = Math.max(.08, Math.min(.92, player.y + dy));
+
+                for (const member of crew) {
+                    if (!member.alive) continue;
+                    if (!member.target) randomTarget(member);
+                    if (distance(member, member.target) < .025) {
+                        if (!member.working) {
+                            member.working = true;
+                            member.wait = 2.5 + Math.random() * 1.5;
+                        }
+                        member.wait -= step;
+                        if (member.wait <= 0) {
+                            member.taskIndex = (member.taskIndex + 1) % consolePoints.length;
+                            member.working = false;
+                            randomTarget(member);
+                        }
+                    } else {
+                        const move = .075 * step;
+                        const angle = Math.atan2(member.target.y - member.y, member.target.x - member.x);
+                        member.x += Math.cos(angle) * move;
+                        member.y += Math.sin(angle) * move;
+                        member.x = Math.max(.07, Math.min(.93, member.x));
+                        member.y = Math.max(.09, Math.min(.91, member.y));
+                    }
+                }
+
+                if (!isImpostor && impostor?.alive && performance.now() - lastNpcKill > 22000 && performance.now() - lastMeeting > 10000) {
+                    const nearby = crew.filter(member => member.alive && member !== impostor && distance(member, impostor) < .16);
+                    if (nearby.length && Math.random() < step * .09) {
+                        const victim = nearby[Math.floor(Math.random() * nearby.length)];
+                        victim.alive = false;
+                        bodies.push({ x: victim.x, y: victim.y, name: victim.name, color: victim.color, time: performance.now() });
+                        lastNpcKill = performance.now();
+                        updateRoster(); updateObjective();
+                        addFeed('A crew signal went dark.');
+                        checkEndConditions();
+                    }
+                }
+
+                const currentRoom = getPlayerRoom();
+                document.getElementById('locationTag').textContent = currentRoom ? currentRoom.name : 'CONNECTING CORRIDOR';
+                killCooldown = isImpostor ? Math.max(0, 13 - (performance.now() - lastKill) / 1000) : 0;
+                nearestConsole = findNearbyConsole();
+                const nearbyBody = nearestBodyForPlayer();
+                const victim = isImpostor ? nearestVictim() : null;
+                const nearbyVictim = victim && distance(player, victim) < .075;
+                const canSeeShip = isImpostor || blackoutTimer <= 0;
+                hint.classList.toggle('visible', canSeeShip && Boolean(nearestConsole || nearbyBody || nearbyVictim));
+                if (nearestConsole) hintText.textContent = `Use ${nearestConsole.name}`;
+                else if (nearbyBody) hintText.textContent = `Report ${nearbyBody.name}`;
+                else if (nearbyVictim) hintText.textContent = `Eliminate ${victim.name}`;
+                document.getElementById('reportButton').disabled = !nearbyBody || !canSeeShip;
+                document.getElementById('killButton').disabled = !isImpostor || !nearbyVictim || killCooldown > 0;
+                const killLabel = document.querySelector('#killButton span');
+                killLabel.textContent = killCooldown > 0 ? `Cooldown ${Math.ceil(killCooldown)}s` : 'Eliminate';
+                const sabotageButton = document.getElementById('sabotageButton');
+                sabotageButton.disabled = !isImpostor || blackoutTimer > 0 || sabotageCooldown > 0;
+                sabotageButton.querySelector('span').textContent = blackoutTimer > 0
+                    ? `Lights out ${Math.ceil(blackoutTimer)}s`
+                    : sabotageCooldown > 0 ? `Cooldown ${Math.ceil(sabotageCooldown)}s` : 'Sabotage lights';
+                const lightStatus = document.getElementById('lightStatus');
+                lightStatus.textContent = blackoutTimer > 0 ? `OFF ${Math.ceil(blackoutTimer)}s` : 'ONLINE';
+                lightStatus.classList.toggle('ready', blackoutTimer <= 0);
+                draw();
+            }
+
+            function interact() {
+                if (!roundActive || !document.getElementById('taskOverlay').classList.contains('hidden')) return;
+                const body = nearestBodyForPlayer();
+                if (body) { reportBody(body); return; }
+                const consolePoint = findNearbyConsole();
+                if (consolePoint) { openTask(consolePoint); return; }
+                if (isImpostor) attemptKill();
+            }
+
+            function animationFrame(now) {
+                const delta = (now - lastFrame) / 1000;
+                lastFrame = now;
+                update(delta);
+                requestAnimationFrame(animationFrame);
+            }
+
+            document.querySelectorAll('.role-choice').forEach(button => {
+                button.addEventListener('click', () => {
+                    selectedRole = button.dataset.role;
+                    document.querySelectorAll('.role-choice').forEach(choice => {
+                        choice.setAttribute('aria-pressed', String(choice === button));
+                    });
+                });
+            });
+            document.getElementById('startButton').addEventListener('click', startRound);
+            document.getElementById('restartButton').addEventListener('click', startRound);
+            document.getElementById('closeTaskButton').addEventListener('click', () => document.getElementById('taskOverlay').classList.add('hidden'));
+            document.getElementById('voteButton').addEventListener('click', castVote);
+            document.getElementById('killButton').addEventListener('click', attemptKill);
+            document.getElementById('sabotageButton').addEventListener('click', () => triggerLightsSabotage(true));
+            document.getElementById('reportButton').addEventListener('click', () => {
+                const body = nearestBodyForPlayer();
+                if (body) reportBody(body);
+            });
+            document.getElementById('mapButton').addEventListener('click', () => { mapOpen = !mapOpen; });
+
+            window.addEventListener('keydown', event => {
+                const key = event.key.toLowerCase();
+                if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) event.preventDefault();
+                if (key === 'escape') {
+                    for (const id of ['taskOverlay', 'meetingOverlay']) document.getElementById(id).classList.add('hidden');
+                    taskLocked = false;
+                    keys.clear();
+                    return;
+                }
+                if (key === 'm') { mapOpen = !mapOpen; return; }
+                if (key === 'f' && !event.repeat) { triggerLightsSabotage(true); return; }
+                if (key === 'e' && !event.repeat) { interact(); return; }
+                if (key === 'r' && !event.repeat) {
+                    const body = nearestBodyForPlayer();
+                    if (body) reportBody(body);
+                    return;
+                }
+                if (key === ' ' && isImpostor && !event.repeat) { attemptKill(); return; }
+                keys.add(key);
+            });
+            window.addEventListener('keyup', event => keys.delete(event.key.toLowerCase()));
+            window.addEventListener('blur', () => keys.clear());
+            window.addEventListener('resize', () => {
+                window.clearTimeout(resizeTimer);
+                resizeTimer = window.setTimeout(resizeCanvas, 60);
+            });
+
+            resizeCanvas();
+            draw();
+            requestAnimationFrame(animationFrame);
+        })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Totally unsus page</title>
+</head>
+
+<body style="background-image: linear-gradient(rgb(194, 191, 191), whitesmoke, grey);">
+    <div
+        style="width: 400px;max-width: 90%;box-sizing: border-box;margin: 20px auto;padding: 16px;border: 1px solid black; border-radius: 20px; background-color: rgb(240, 240, 230);">
+        <form action="" id="register"
+            style="display: flex;flex-direction: column;align-items: center;gap: 8px;text-align: center;">
+
+            <h3 style="color: rgb(117, 138, 86);">Welcome To a Very Totally Unsus Page</h3>
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Enter Username">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="Enter User-Email">
+            <label for="number">phone Number</label>
+            <input type="number" id="number" placeholder="Enter phone-number">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Enter password">
+            <label for="confirmPass">Confirm Password</label>
+            <input type="password" id="confirmPass" placeholder="Confirm password">
+            <input type="submit" id="submit">
+            <p id="message"></p>
+        </form>
+    </div>
+
+
+    <script>
+        const formRegistration = document.querySelector('#register');
+        const message = document.querySelector('#message');
+        formRegistration.addEventListener('submit', function (event) {
+            event.preventDefault();
+            message.style.color = 'red';
+
+            const userName = document.querySelector('#username').value.trim();
+            const Email = document.querySelector('#email').value.trim();
+            const phone = document.querySelector('#number').value.trim();
+            const password = document.querySelector('#password').value.trim();
+            const confirmPass = document.querySelector('#confirmPass').value.trim();
+            if (userName === '') {
+                message.textContent = 'You no get name?';
+                return;
+            }
+            if (!Email.includes('@')) {
+                message.textContent = 'enter a valid email address';
+                return;
+            }
+            if (phone === '') {
+                message.textContent = ' you go put phone number ode';
+                return;
+            }
+            if (password.length < 6) {
+                message.textContent = 'password must be more than six characters';
+                return;
+            }
+            if (password !== confirmPass) {
+                message.textContent = ' password does not match idiot';
+                return;
+            }
+
+            const user = {
+                userName: userName,
+                Email: Email,
+                phone: phone,
+                password: password,
+            };
+            const userData = JSON.stringify(user);
+            localStorage.setItem('users', userData);
+            message.textContent = 'Registration successful';
+            message.style.color = 'green';
+            // form.reset();
+            window.location.href = 'login of unsus.html';
+        })
+
+    </script>
+</body>
+
+</html>
